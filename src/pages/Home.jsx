@@ -69,33 +69,7 @@ export default function Home() {
         />
       </main>
 
-      <div className="w-full max-w-xl px-4 mx-auto mt-12">
-        <div className="p-6 space-y-4 text-center bg-white border border-blue-200 shadow-xl dark:bg-gray-800 dark:border-gray-700 rounded-2xl">
-          <h3 className="text-xl font-bold text-blue-700 dark:text-blue-300">
-            🔗 Got a Public Signing Link?
-          </h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            Paste a signing link below and press <span className="font-semibold">Enter</span> to open.
-          </p>
-
-          <input
-            type="text"
-            placeholder="e.g. http://localhost:5173/sign/public/your-token"
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                const url = e.target.value.trim();
-                if (url.includes("/sign/public/")) {
-                  const token = url.split("/sign/public/")[1];
-                  navigate(`/sign/public/${token}`);
-                } else {
-                  toast.error("❌ Invalid link. It should include /sign/public/");
-                }
-              }
-            }}
-            className="w-full px-4 py-3 text-black transition-all bg-white border border-blue-300 shadow-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-      </div>
+      
     </>
   );
 }
