@@ -6,6 +6,7 @@ import Navbar from "../components/Navbar";
 import axios from "axios";
 import { toast, Toaster } from "react-hot-toast";
 import { url } from "../utils/api";
+import axios from 'axios';
 
 const PublicSign = () => {
   const { token } = useParams();
