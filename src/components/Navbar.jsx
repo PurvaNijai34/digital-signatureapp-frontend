@@ -72,12 +72,19 @@ export default function Navbar({ onLoginClick, onRegisterClick }) {
               </button>
             </>
           ) : user ? (
+      <>
+      <button
+                onClick={() => navigate("/dashboard")}
+                className="px-4 py-2 font-semibold text-white bg-green-600 rounded hover:bg-green-700"
+              >
+                 Back to Dashboard
+              </button>
             <button
               onClick={handleLogout}
               className="px-4 py-2 font-semibold text-white transition bg-red-600 rounded hover:bg-red-700"
             >
               Logout
-            </button>
+            </button></>
           ) : null}
         </div>
       </div>
