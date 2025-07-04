@@ -1,3 +1,7 @@
+
+
+
+
 import { useEffect, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
 import PDFPreview from "../components/PDFPreview";
@@ -24,9 +28,7 @@ const PublicSign = () => {
   useEffect(() => {
     const fetchSignature = async () => {
       try {
-        const res = await axios.get(
-          `${url}/api/signatures/public/${token}`
-        );
+        const res = await axios.get(`${url}/api/signatures/public/${token}`);
         setSignature(res.data);
         if (res.data.text) setText(res.data.text);
       } catch (err) {
@@ -39,29 +41,35 @@ const PublicSign = () => {
 
   const handleSubmit = async () => {
     const viewer = document.querySelector(".rpv-core__viewer");
+    const canvasWrapper = viewer?.querySelector(".rpv-core__inner-pages");
     const canvas = viewer?.querySelector("canvas");
-    if (!canvas) return toast.error("❌ PDF canvas not found");
 
-    const canvasRect = canvas.getBoundingClientRect();
+    if (!canvasWrapper || !canvas) return toast.error("❌ PDF canvas not found");
+
+    const scrollTop = canvasWrapper.scrollTop;
+    const scrollLeft = canvasWrapper.scrollLeft;
+
+    const offsetX = position.x + scrollLeft;
+    const offsetY = position.y + scrollTop;
+
     const pdfWidth = 595;
     const pdfHeight = 842;
-    const scaleX = pdfWidth / canvasRect.width;
-    const scaleY = pdfHeight / canvasRect.height;
-    const scaledX = position.x * scaleX;
-    const scaledY = pdfHeight - position.y * scaleY;
+
+    const scaleX = pdfWidth / canvas.offsetWidth;
+    const scaleY = pdfHeight / canvas.offsetHeight;
+
+    const scaledX = offsetX * scaleX;
+    const scaledY = pdfHeight - offsetY * scaleY;
 
     try {
-      await axios.post(
-        `${url}/api/signatures/public/${token}/sign`,
-        {
+      await axios.post(`${url}/api/signatures/public/${token}/sign`, {
           text,
           fontSize,
           fontColor,
           fontFamily,
           x: scaledX,
           y: scaledY,
-        }
-      );
+      });
       toast.success("✅ Signature submitted!");
       setSuccess(true);
     } catch (err) {
@@ -72,10 +80,9 @@ const PublicSign = () => {
 
   const handleReject = async () => {
     try {
-      await axios.post(
-        `${url}/api/signatures/public/${token}/reject`,
-        { rejectedReason }
-      );
+      await axios.post(`${url}/api/signatures/public/${token}/reject`, {
+        rejectedReason,
+      });
       toast.success("❌ Signature rejected");
       setSuccess(true);
     } catch (err) {
@@ -98,8 +105,31 @@ const PublicSign = () => {
       <Toaster position="top-center" />
       <div className="pt-16">
         <div className="flex flex-col min-h-[calc(100vh-4rem)] gap-6 px-4 py-6 bg-gray-100 dark:bg-gray-900 lg:flex-row">
+          {/* PDF Viewer + Draggable Signature */}
           <div className="relative w-full lg:w-2/3 bg-white dark:bg-gray-800 rounded-xl shadow border dark:border-gray-700 flex flex-col max-h-[calc(100vh-8rem)] overflow-hidden">
             <PDFPreview id={signature.documentId} refresh={success} publicMode={true} />
+            {/* <Draggable
+              nodeRef={nodeRef}
+              position={position}
+              onDrag={(e, data) => setPosition({ x: data.x, y: data.y })}
+            >
+              <div
+                ref={nodeRef}
+                className="absolute px-4 py-2 font-semibold border-2 border-dashed rounded-md shadow-md cursor-move"
+                style={{
+                  fontSize: `${fontSize}px`,
+                  fontFamily,
+                  color: fontColor,
+                  backgroundColor: "rgba(255,255,255,0.7)",
+                  borderColor: fontColor,
+                  left: `${position.x}px`,
+                  top: `${position.y}px`,
+                }}
+              >
+                {text}
+              </div>
+            </Draggable> */}
+            {!success && (
             <Draggable
               nodeRef={nodeRef}
               position={position}
@@ -121,8 +151,11 @@ const PublicSign = () => {
                 {text}
               </div>
             </Draggable>
+)}
+
           </div>
 
+          {/* Signature Options */}
           <div className="w-full lg:w-1/3 max-h-[calc(100vh-8rem)]">
             <div className="h-full p-6 space-y-6 overflow-auto bg-white border shadow dark:bg-gray-800 rounded-xl dark:border-gray-700">
               <h2 className="text-2xl font-bold text-center text-gray-800 dark:text-white">
