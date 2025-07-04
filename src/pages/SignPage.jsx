@@ -30,22 +30,26 @@ const SignPage = () => {
 
   const handleSaveSignature = async () => {
     const viewer = document.querySelector(".rpv-core__viewer");
+    const canvasWrapper = viewer?.querySelector(".rpv-core__inner-pages");
     const canvas = viewer?.querySelector("canvas");
 
-    if (!canvas) return toast.error("❌ PDF canvas not found");
+    if (!canvasWrapper || !canvas)
+      return toast.error("❌ PDF canvas not found");
 
-    const canvasRect = canvas.getBoundingClientRect();
+    const scrollTop = canvasWrapper.scrollTop;
+    const scrollLeft = canvasWrapper.scrollLeft;
+
+    const offsetX = position.x + scrollLeft;
+    const offsetY = position.y + scrollTop;
+
     const pdfWidth = 595;
     const pdfHeight = 842;
 
-    const scaleX = pdfWidth / canvasRect.width;
-    const scaleY = pdfHeight / canvasRect.height;
+    const scaleX = pdfWidth / canvas.offsetWidth;
+    const scaleY = pdfHeight / canvas.offsetHeight;
 
-    const relativeX = position.x;
-    const relativeY = position.y;
-
-    const scaledX = relativeX * scaleX;
-    const scaledY = pdfHeight - relativeY * scaleY;
+    const scaledX = offsetX * scaleX;
+    const scaledY = pdfHeight - offsetY * scaleY;
 
     try {
       const res = await axios.post(
@@ -64,10 +68,12 @@ const SignPage = () => {
       );
       toast.success("✅ Signature saved!");
       setSignatureId(res.data._id);
+      setRefreshPreview((prev) => !prev);
     } catch (err) {
       toast.error("❌ Failed to save signature.");
     }
   };
+
 
   const handleFinalizePDF = async () => {
   try {
@@ -77,10 +83,8 @@ const SignPage = () => {
       `${url}/api/signatures/finalize`,
       { documentId: id },
       {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        responseType: "blob", // ✅ Important: receive binary file (PDF)
+          headers: { Authorization: `Bearer ${token}` },
+          responseType: "blob",
       }
     );
 
@@ -97,7 +101,7 @@ const SignPage = () => {
     link.remove();
 
     toast.success("✅ PDF finalized and downloaded!");
-    setRefreshPreview((prev) => !prev); // Refresh preview if needed
+      setRefreshPreview((prev) => !prev);
   } catch (err) {
     console.error("❌ Finalize error:", err);
     toast.error("❌ Failed to finalize PDF.");
@@ -118,7 +122,7 @@ const SignPage = () => {
               refresh={refreshPreview}
               showTracking={showTracking}
             />
-            <Draggable
+            {/* <Draggable
               nodeRef={nodeRef}
               position={position}
               onDrag={(e, data) => setPosition({ x: data.x, y: data.y })}
@@ -139,7 +143,31 @@ const SignPage = () => {
               >
                 {signText}
               </div>
+            </Draggable> */}
+
+            {!showTracking && (
+              <Draggable
+                nodeRef={nodeRef}
+                position={position}
+                onDrag={(e, data) => setPosition({ x: data.x, y: data.y })}
+              >
+                <div
+                  ref={nodeRef}
+                  className="absolute z-50 px-4 py-2 font-semibold border-2 border-dashed rounded-md shadow-md cursor-move bg-opacity-80"
+                style={{
+                  fontSize: `${fontSize}px`,
+                  fontFamily,
+                  color: fontColor,
+                  backgroundColor: "rgba(255,255,255,0.8)",
+                  borderColor: fontColor,
+                  left: `${position.x}px`,
+                  top: `${position.y}px`,
+                }}
+              >
+                {signText}
+              </div>
             </Draggable>
+            )}
           </div>
 
           {/* Signature Panel */}
